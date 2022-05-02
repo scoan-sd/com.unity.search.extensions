@@ -95,11 +95,21 @@ namespace UnityEditor.Search
             };
         }
 
-        void Import(ICollection<UnityEngine.Object> objects)
+        internal void Import(ICollection<UnityEngine.Object> objects)
         {
             Add(objects, ViewCenter());
             if (graphLayout == null)
                 SetDefaultLayout();
+        }
+
+        internal void ExpandAllNodes()
+        {
+            // Expanding a node adds new nodes; operate on copy of initial list
+            foreach (Node node in graph.nodes.ToList())
+            {
+                graph.ExpandNodeDependencies(node);
+                graph.ExpandNodeReferences(node);
+            }
         }
 
         void Add(ICollection<UnityEngine.Object> objects, in Vector2 pos)
@@ -657,13 +667,13 @@ namespace UnityEditor.Search
             return new Vector2(nodeRect.xMin + kNodeMargin, nodeRect.yMax - kNodeMargin - kExpandButtonHeight / 2f);
         }
 
-        void ClearGraph()
+        internal void ClearGraph()
         {
             graph.Clear();
             SetMinZoomLevel(kBaseZoomMinLevel);
         }
 
-        void Relayout()
+        internal void Relayout()
         {
             SetLayout(graphLayout);
             FrameAll();
@@ -704,6 +714,11 @@ namespace UnityEditor.Search
                 return;
 
             var bb = DependencyGraphUtils.GetBoundingBox(graph.nodes);
+            // If we're framing one node, pad framed region a bunch
+            Vector2 FrameVector = graph.nodes.Count <= 1 ? new Vector2(50, 50) : new Vector2(15, 15);
+            bb.min += -FrameVector;
+            bb.max += FrameVector;
+
             FrameRegion(bb);
         }
 
