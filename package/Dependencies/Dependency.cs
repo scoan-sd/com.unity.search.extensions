@@ -192,6 +192,46 @@ namespace UnityEditor.Search
             var searchContext = SearchService.CreateContext(new[] { "dep", "scene", "asset", "adb" }, $"ref=\"{path}\"");
             SearchService.ShowWindow(searchContext, "References", saveFilters: false);
         }
+        
+        [MenuItem("Assets/Dependencies/Open In Dependency Viewer", priority = 10150)]
+        internal static void OpenInDependencyViewer()
+        {
+            var obj = Selection.activeObject;
+            if (!obj)
+                return;
+            
+            DependencyViewer win = EditorWindow.GetWindow(typeof(DependencyViewer), true, null, true) as DependencyViewer;
+            // Push object to viewer (necessary if we just opened it)
+            DependencyViewerState ViewerState = DependencyBuiltinStates.ObjectDependencies(obj, win.GetConfig());
+            win.PushViewerState(ViewerState);
+        }
+
+        [MenuItem("Assets/Dependencies/Open Dependency Graph", priority = 10160)]
+        internal static void OpenInDependencyGraph()
+        {
+            var obj = Selection.activeObject;
+            if (!obj)
+                return;
+            
+            DependencyGraphViewer win = EditorWindow.GetWindow(typeof(DependencyGraphViewer), false, null, true) as DependencyGraphViewer;
+
+            // Adding the selection and laying the graph out without a delay causes issues (busted UX, bad layout)
+            // Doesn't feel great to do nested delays, but it resolves the issues
+            // TODO: Why do we need to do this?
+            
+            // Delay populating graph with selection until after window initialization
+            EditorApplication.delayCall += () => 
+            { 
+                win.ClearGraph();
+                win.Import(Selection.objects);
+                win.ExpandAllNodes();
+                // Delay layout until after import and expansion
+                EditorApplication.delayCall += () =>
+                {
+                    win.Relayout();
+                };
+            };
+        }
 
         [MenuItem("Assets/Dependencies/Add to ignored", true, priority = 10200)]
         internal static bool CanAddToIgnoredList()

@@ -44,7 +44,7 @@ namespace UnityEditor.Search
 
         [SerializeField] bool m_LockSelection;
         [SerializeField] DependencyViewSplitterInfo m_Splitter;
-        [SerializeField] DependencyViewerState m_CurrentState;
+        DependencyViewerState m_CurrentState;
         [SerializeField] bool m_ShowSceneRefs = true;
         #if UNITY_2022_2_OR_NEWER
         [SerializeField] int m_DependencyDepthLevel = 1;
